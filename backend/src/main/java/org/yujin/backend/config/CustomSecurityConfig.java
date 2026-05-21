@@ -1,0 +1,85 @@
+package org.yujin.backend.config;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.yujin.backend.security.CustomUserDetailsService;
+import org.yujin.backend.security.filter.JWTCheckFilter;
+import org.yujin.backend.security.handler.APILoginFailHandler;
+import org.yujin.backend.security.handler.APILoginSuccessHandler;
+import org.yujin.backend.security.handler.CustomAccessDeniedHandler;
+
+@Configuration
+@RequiredArgsConstructor
+@Log4j2
+@EnableMethodSecurity
+public class CustomSecurityConfig {
+
+    private final CustomUserDetailsService customUserDetailsService;
+
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http) throws Exception {
+
+        log.info("Security Config");
+
+        http
+                // JWT 방식
+                .sessionManagement(session -> session.sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS))
+
+                // csrf off
+                .csrf(csrf -> csrf.disable())
+
+                // userDetailsService 등록
+                .userDetailsService(
+                        customUserDetailsService)
+
+                // 권한 설정
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/health",
+                                "/api/member/login")
+                        .permitAll()
+
+                        .anyRequest()
+                        .authenticated())
+
+                // 로그인 처리
+                .formLogin(config -> {
+
+                    config.loginProcessingUrl(
+                            "/api/member/login");
+
+                    config.successHandler(
+                            new APILoginSuccessHandler());
+
+                    config.failureHandler(
+                            new APILoginFailHandler());
+                })
+
+                // 접근 거부 처리(권한없는 행동 ex:사원등록, 수정)
+                .exceptionHandling(config -> config.accessDeniedHandler(new CustomAccessDeniedHandler()))
+
+                // JWT 필터
+                .addFilterBefore(
+                        new JWTCheckFilter(),
+                        UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+
+        return new BCryptPasswordEncoder();
+    }
+}
