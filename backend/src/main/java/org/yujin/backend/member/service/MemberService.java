@@ -9,6 +9,7 @@ import org.yujin.backend.member.dto.MemberModifyDTO;
 import org.yujin.backend.member.dto.MemberResponseDTO;
 import org.yujin.backend.member.dto.MemberSearchDTO;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -21,7 +22,9 @@ public interface MemberService {
     void modify(String employeeNo, MemberModifyDTO memberModifyDTO);
 
     PageResponseDTO<MemberResponseDTO> getList(MemberSearchDTO memberSearchDTO);
-    
+
+    Map<String, Object> refreshToken(String refreshToken);
+
     default MemberDTO entityToDTO(Member member) {
 
         return new MemberDTO(
@@ -34,9 +37,9 @@ public interface MemberService {
                 member.getMemberRoleList()
                         .stream()
                         .map(role -> role.name())
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
     }
+
     default MemberResponseDTO entityToResponseDTO(Member member) {
 
         return MemberResponseDTO.builder()
@@ -49,8 +52,7 @@ public interface MemberService {
                         member.getMemberRoleList()
                                 .stream()
                                 .map(role -> role.name())
-                                .collect(Collectors.toList())
-                )
+                                .collect(Collectors.toList()))
                 .build();
     }
 }

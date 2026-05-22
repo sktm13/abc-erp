@@ -1,21 +1,23 @@
 package org.yujin.backend.security.filter;
 
-import com.google.gson.Gson;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.log4j.Log4j2;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.util.JWTUtil;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.Map;
+import com.google.gson.Gson;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class JWTCheckFilter extends OncePerRequestFilter {
@@ -28,18 +30,22 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 
         log.info("check uri: {}", path);
 
-        // JWT 검사제외 목록
-
-        // Health Check
+        // ELB / 서버 상태 확인
         if (path.equals("/health")) {
             return true;
         }
-        // 로그인 API
+
+        // 로그인 API는 JWT 검사 제외
         if (path.equals("/api/member/login")) {
             return true;
         }
 
-        // CORS preflight 제외
+        // Refresh Token 재발급 API는 JWT 검사 제외
+        if (path.equals("/api/auth/refresh")) {
+            return true;
+        }
+
+        // CORS Preflight 요청 제외
         if (request.getMethod().equals("OPTIONS")) {
             return true;
         }
@@ -51,54 +57,69 @@ public class JWTCheckFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         String authHeaderStr = request.getHeader("Authorization");
 
+        /*
+         * 여기서는 JWT 검증만 처리한다.
+         * Controller / Service 로직에서 발생한 예외는 여기서 잡으면 안 된다.
+         */
         try {
+            if (authHeaderStr == null || !authHeaderStr.startsWith("Bearer ")) {
+                throw new RuntimeException("Authorization header is missing or invalid");
+            }
+
             String accessToken = authHeaderStr.substring(7);
 
-            Map<String, Object> claims = JWTUtil.validateToken(accessToken);
+            Map<String, Object> claims =
+                    JWTUtil.validateToken(accessToken);
 
             log.info("JWT claims: {}", claims);
 
-            String employeeNo = (String) claims.get("employeeNo");
+            String employeeNo =
+                    (String) claims.get("employeeNo");
 
-            String email = (String) claims.get("email");
+            String email =
+                    (String) claims.get("email");
 
-            //JWT에 pw넣지않음
-            String pw = "";
+            String name =
+                    (String) claims.get("name");
 
-            String name = (String) claims.get("name");
+            String department =
+                    (String) claims.get("department");
 
-            String department = (String) claims.get("department");
+            String status =
+                    (String) claims.get("status");
 
-            String status = (String) claims.get("status");
+            List<String> roleNames =
+                    ((List<?>) claims.get("roleNames"))
+                            .stream()
+                            .map(Object::toString)
+                            .toList();
 
-            List<String> roleNames = ((List<?>) claims.get("roleNames"))
-                    .stream()
-                    .map(Object::toString)
-                    .toList();
+            MemberDTO memberDTO =
+                    new MemberDTO(
+                            employeeNo,
+                            email,
+                            "",
+                            name,
+                            department,
+                            status,
+                            roleNames
+                    );
 
-            MemberDTO memberDTO = new MemberDTO(
-                    employeeNo,
-                    email,
-                    pw,
-                    name,
-                    department,
-                    status,
-                    roleNames);
-
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                    memberDTO,
-                    null,
-                    memberDTO.getAuthorities());
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(
+                            memberDTO,
+                            null,
+                            memberDTO.getAuthorities()
+                    );
 
             SecurityContextHolder
                     .getContext()
                     .setAuthentication(authenticationToken);
-
-            filterChain.doFilter(request, response);
 
         } catch (Exception e) {
 
@@ -106,18 +127,33 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 
             Gson gson = new Gson();
 
-            String msg = gson.toJson(
-                    Map.of(
-                            "error",
-                            "ERROR_ACCESS_TOKEN"));
+            String msg =
+                    gson.toJson(
+                            Map.of(
+                                    "error",
+                                    "ERROR_ACCESS_TOKEN"
+                            )
+                    );
 
-            response.setContentType(
-                    "application/json;charset=UTF-8");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
 
-            PrintWriter writer = response.getWriter();
+            PrintWriter writer =
+                    response.getWriter();
 
             writer.println(msg);
             writer.close();
+
+            return;
         }
+
+        /*
+         * 중요:
+         * 이 코드는 try-catch 밖에 둔다.
+         *
+         * 그래야 Controller / Service에서 발생한 예외가
+         * ERROR_ACCESS_TOKEN으로 잘못 변환되지 않는다.
+         */
+        filterChain.doFilter(request, response);
     }
 }

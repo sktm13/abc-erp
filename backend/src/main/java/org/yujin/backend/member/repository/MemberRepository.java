@@ -1,5 +1,8 @@
 package org.yujin.backend.member.repository;
 
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,5 +29,7 @@ public interface MemberRepository extends JpaRepository<Member, String>, MemberS
             WHERE m.employeeNo LIKE CONCAT(:prefix, '%')
             ORDER BY m.employeeNo DESC
             """)
-    String findLastEmployeeNo(@Param("prefix") String prefix);
+    List<String> findLastEmployeeNo(
+            @Param("prefix") String prefix,
+            Pageable pageable);
 }

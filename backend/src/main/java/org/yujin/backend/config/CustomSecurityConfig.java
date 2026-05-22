@@ -2,6 +2,9 @@ package org.yujin.backend.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,6 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.yujin.backend.security.CustomUserDetailsService;
 import org.yujin.backend.security.filter.JWTCheckFilter;
 import org.yujin.backend.security.handler.APILoginFailHandler;
@@ -23,63 +29,100 @@ import org.yujin.backend.security.handler.CustomAccessDeniedHandler;
 @EnableMethodSecurity
 public class CustomSecurityConfig {
 
-    private final CustomUserDetailsService customUserDetailsService;
+        private final CustomUserDetailsService customUserDetailsService;
 
-    @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain filterChain(
+                        HttpSecurity http) throws Exception {
 
-        log.info("Security Config");
+                log.info("Security Config");
 
-        http
-                // JWT 방식
-                .sessionManagement(session -> session.sessionCreationPolicy(
-                        SessionCreationPolicy.STATELESS))
+                http
 
-                // csrf off
-                .csrf(csrf -> csrf.disable())
+                                // CORS 설정
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // userDetailsService 등록
-                .userDetailsService(
-                        customUserDetailsService)
+                                // JWT 방식
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
 
-                // 권한 설정
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/health",
-                                "/api/member/login")
-                        .permitAll()
+                                // csrf off
+                                .csrf(csrf -> csrf.disable())
 
-                        .anyRequest()
-                        .authenticated())
+                                // userDetailsService 등록
+                                .userDetailsService(
+                                                customUserDetailsService)
 
-                // 로그인 처리
-                .formLogin(config -> {
+                                // 권한 설정
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/health",
+                                                                "/api/member/login",
+                                                                "/api/auth/refresh"
+                                                )
+                                                .permitAll()
 
-                    config.loginProcessingUrl(
-                            "/api/member/login");
+                                                .anyRequest()
+                                                .authenticated())
 
-                    config.successHandler(
-                            new APILoginSuccessHandler());
+                                // 로그인 처리
+                                .formLogin(config -> {
 
-                    config.failureHandler(
-                            new APILoginFailHandler());
-                })
+                                        config.loginProcessingUrl(
+                                                        "/api/member/login");
 
-                // 접근 거부 처리(권한없는 행동 ex:사원등록, 수정)
-                .exceptionHandling(config -> config.accessDeniedHandler(new CustomAccessDeniedHandler()))
+                                        config.successHandler(
+                                                        new APILoginSuccessHandler());
 
-                // JWT 필터
-                .addFilterBefore(
-                        new JWTCheckFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
+                                        config.failureHandler(
+                                                        new APILoginFailHandler());
+                                })
 
-        return http.build();
-    }
+                                // 접근 거부 처리(권한없는 행동 ex:사원등록, 수정)
+                                .exceptionHandling(
+                                                config -> config.accessDeniedHandler(new CustomAccessDeniedHandler()))
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
+                                // JWT 필터
+                                .addFilterBefore(
+                                                new JWTCheckFilter(),
+                                                UsernamePasswordAuthenticationFilter.class);
 
-        return new BCryptPasswordEncoder();
-    }
+                return http.build();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+
+                return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+
+                CorsConfiguration configuration = new CorsConfiguration();
+
+                configuration.setAllowedOrigins(List.of(
+                                "http://localhost:5173"));
+
+                configuration.setAllowedMethods(List.of(
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "PATCH",
+                                "DELETE",
+                                "OPTIONS"));
+
+                configuration.setAllowedHeaders(List.of(
+                                "Authorization",
+                                "Cache-Control",
+                                "Content-Type"));
+
+                configuration.setAllowCredentials(false);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+                source.registerCorsConfiguration("/**", configuration);
+
+                return source;
+        }
 }

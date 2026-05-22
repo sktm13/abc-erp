@@ -1,6 +1,8 @@
 package org.yujin.backend.member.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,13 +10,17 @@ import org.yujin.backend.common.dto.PageResponseDTO;
 import org.yujin.backend.member.domain.Member;
 import org.yujin.backend.member.domain.MemberRole;
 import org.yujin.backend.member.domain.MemberStatus;
+import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.member.dto.MemberJoinDTO;
 import org.yujin.backend.member.dto.MemberModifyDTO;
 import org.yujin.backend.member.dto.MemberResponseDTO;
 import org.yujin.backend.member.dto.MemberSearchDTO;
 import org.yujin.backend.member.repository.MemberRepository;
+import org.yujin.backend.util.JWTUtil;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -104,13 +110,50 @@ public class MemberServiceImpl implements MemberService {
         return memberRepository.searchList(memberSearchDTO);
     }
 
+    @Override
+    public Map<String, Object> refreshToken(String refreshToken) {
+
+        Map<String, Object> refreshClaims = JWTUtil.validateToken(refreshToken);
+
+        String employeeNo = (String) refreshClaims.get("employeeNo");
+
+        Member member = memberRepository.getWithRoles(employeeNo);
+
+        if (member == null) {
+            throw new RuntimeException("존재하지 않는 사원입니다.");
+        }
+
+        if (member.getStatus() == MemberStatus.RESIGNED) {
+            throw new RuntimeException("퇴사 처리된 사원입니다.");
+        }
+
+        MemberDTO memberDTO = entityToDTO(member);
+
+        Map<String, Object> claims = memberDTO.getClaims();
+
+        String newAccessToken = JWTUtil.generateToken(claims, 30);
+
+        String newRefreshToken = JWTUtil.generateToken(claims, 60 * 24);
+
+        claims.put("accessToken", newAccessToken);
+        claims.put("refreshToken", newRefreshToken);
+
+        return claims;
+    }
+
     private String generateEmployeeNo(String department) {
 
         String year = String.valueOf(LocalDate.now().getYear()).substring(2);
 
         String prefix = "ABC-" + year + "-" + department + "-";
 
-        String lastEmployeeNo = memberRepository.findLastEmployeeNo(prefix);
+        List<String> lastEmployeeNoList = memberRepository.findLastEmployeeNo(
+                prefix,
+                PageRequest.of(0, 1));
+
+        String lastEmployeeNo = lastEmployeeNoList.isEmpty()
+                ? null
+                : lastEmployeeNoList.get(0);
 
         int nextNumber = 1;
 
