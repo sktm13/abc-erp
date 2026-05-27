@@ -11,6 +11,7 @@ const initState: LoginInfo = {
     name: "",
     department: "",
     status: "",
+    presenceStatus: "OFFLINE",
     roleNames: [],
     accessToken: "",
     refreshToken: "",

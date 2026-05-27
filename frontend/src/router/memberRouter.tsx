@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import MemberReadPage from "../pages/member/MemberReadPage";
 
 const Loading = <div>Loading...</div>;
 
@@ -27,6 +28,15 @@ export default function memberRouter() {
           </Suspense>
         ),
       },
+      {
+        path: "read/:employeeNo",
+        element: (
+          <Suspense fallback={Loading}>
+            <MemberReadPage />
+          </Suspense>
+        ),
+      },
+
     ],
   };
 }

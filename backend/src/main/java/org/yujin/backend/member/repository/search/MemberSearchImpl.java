@@ -26,8 +26,7 @@ public class MemberSearchImpl extends QuerydslRepositorySupport implements Membe
 
         Pageable pageable = PageRequest.of(
                 searchDTO.getPage() - 1,
-                searchDTO.getSize()
-        );
+                searchDTO.getSize());
 
         QMember member = QMember.member;
 
@@ -39,8 +38,7 @@ public class MemberSearchImpl extends QuerydslRepositorySupport implements Membe
             builder.and(
                     member.employeeNo.contains(keyword)
                             .or(member.name.contains(keyword))
-                            .or(member.email.contains(keyword))
-            );
+                            .or(member.email.contains(keyword)));
         }
 
         if (searchDTO.getDepartment() != null && !searchDTO.getDepartment().isBlank()) {
@@ -72,14 +70,16 @@ public class MemberSearchImpl extends QuerydslRepositorySupport implements Membe
                         .name(m.getName())
                         .department(m.getDepartment())
                         .status(m.getStatus().name())
+                        .presenceStatus(
+                                m.getPresenceStatus() == null
+                                        ? "OFFLINE"
+                                        : m.getPresenceStatus().name())
                         .roleNames(
                                 m.getMemberRoleList()
                                         .stream()
                                         .map(role -> role.name())
-                                        .toList()
-                        )
-                        .build()
-                )
+                                        .toList())
+                        .build())
                 .toList();
 
         return PageResponseDTO.<MemberResponseDTO>withAll()

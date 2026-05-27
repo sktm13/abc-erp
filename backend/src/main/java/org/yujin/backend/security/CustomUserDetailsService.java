@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.yujin.backend.member.domain.Member;
 import org.yujin.backend.member.domain.MemberStatus;
+import org.yujin.backend.member.domain.PresenceStatus;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.member.repository.MemberRepository;
 
@@ -46,11 +47,13 @@ public class CustomUserDetailsService implements UserDetailsService {
                 member.getName(),
                 member.getDepartment(),
                 member.getStatus().name(),
+                member.getPresenceStatus() == null
+                        ? PresenceStatus.OFFLINE.name()
+                        : member.getPresenceStatus().name(),
                 member.getMemberRoleList()
                         .stream()
                         .map(role -> role.name())
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
 
         log.info(memberDTO);
 

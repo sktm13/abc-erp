@@ -7,6 +7,8 @@ import type {
   PageResponse,
   MemberRegisterRequest,
   MemberRegisterResponse,
+  MemberModifyRequest,
+  PresenceStatus
 } from "../types/member";
 
 const API_SERVER_HOST = import.meta.env.VITE_API_SERVER;
@@ -47,6 +49,35 @@ export const registerMember = async (
   data: MemberRegisterRequest
 ): Promise<MemberRegisterResponse> => {
   const res = await jwtAxios.post("/api/member/register", data);
+
+  return res.data;
+};
+
+export const getMember = async (
+  employeeNo: string
+): Promise<MemberResponse> => {
+  const res = await jwtAxios.get(`/api/member/${employeeNo}`);
+
+  return res.data;
+};
+
+export const modifyMember = async (
+  employeeNo: string,
+  data: MemberModifyRequest
+): Promise<{ result: string }> => {
+  const res = await jwtAxios.put(`/api/member/${employeeNo}`, data);
+
+  return res.data;
+};
+
+export const changeMyPresenceStatus = async (
+  presenceStatus: PresenceStatus
+): Promise<{ result: string; presenceStatus: PresenceStatus }> => {
+  const res = await jwtAxios.put("/api/member/me/presence", null, {
+    params: {
+      presenceStatus,
+    },
+  });
 
   return res.data;
 };

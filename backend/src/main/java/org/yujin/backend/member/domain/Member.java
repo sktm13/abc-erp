@@ -40,6 +40,10 @@ public class Member {
     // LEAVE = 휴직
     // RESIGNED = 퇴사
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private PresenceStatus presenceStatus = PresenceStatus.OFFLINE;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -67,6 +71,10 @@ public class Member {
 
     public void changeDepartment(String department) {
         this.department = department;
+    }
+
+    public void changePresenceStatus(PresenceStatus presenceStatus) {
+        this.presenceStatus = presenceStatus;
     }
 
     // 재직 처리

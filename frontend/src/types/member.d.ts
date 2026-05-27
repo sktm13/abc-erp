@@ -4,6 +4,7 @@ export interface LoginInfo {
   name: string;
   department: string;
   status: string;
+  presenceStatus: PresenceStatus;
   roleNames: string[];
   accessToken: string;
   refreshToken: string;
@@ -17,6 +18,7 @@ export interface MemberResponse {
   name: string;
   department: string;
   status: "ACTIVE" | "LEAVE" | "RESIGNED";
+  presenceStatus: PresenceStatus;
   roleNames: string[];
 }
 
@@ -59,3 +61,14 @@ export interface MemberRegisterRequest {
 export interface MemberRegisterResponse {
   employeeNo: string;
 }
+
+export interface MemberModifyRequest {
+  email?: string;
+  pw?: string;
+  name?: string;
+  department?: string;
+  status?: "ACTIVE" | "LEAVE" | "RESIGNED";
+  roleList?: ("EMPLOYEE" | "MANAGER" | "ADMIN")[];
+}
+
+export type PresenceStatus = "ONLINE" | "AWAY" | "OFFLINE";

@@ -19,5 +19,7 @@ public class MemberResponseDTO {
 
     private String status;
 
+    private String presenceStatus;
+    
     private List<String> roleNames;
 }

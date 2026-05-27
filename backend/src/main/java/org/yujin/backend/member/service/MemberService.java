@@ -3,6 +3,7 @@ package org.yujin.backend.member.service;
 import org.springframework.transaction.annotation.Transactional;
 import org.yujin.backend.common.dto.PageResponseDTO;
 import org.yujin.backend.member.domain.Member;
+import org.yujin.backend.member.domain.PresenceStatus;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.member.dto.MemberJoinDTO;
 import org.yujin.backend.member.dto.MemberModifyDTO;
@@ -15,44 +16,53 @@ import java.util.stream.Collectors;
 @Transactional
 public interface MemberService {
 
-    String join(MemberJoinDTO memberJoinDTO);
+        String join(MemberJoinDTO memberJoinDTO);
 
-    MemberResponseDTO get(String employeeNo);
+        MemberResponseDTO get(String employeeNo);
 
-    void modify(String employeeNo, MemberModifyDTO memberModifyDTO);
+        void modify(String employeeNo, MemberModifyDTO memberModifyDTO);
 
-    PageResponseDTO<MemberResponseDTO> getList(MemberSearchDTO memberSearchDTO);
+        PageResponseDTO<MemberResponseDTO> getList(MemberSearchDTO memberSearchDTO);
 
-    Map<String, Object> refreshToken(String refreshToken);
+        Map<String, Object> refreshToken(String refreshToken);
 
-    default MemberDTO entityToDTO(Member member) {
+        void changeMyPresenceStatus(String employeeNo, PresenceStatus presenceStatus);
+        
+        default MemberDTO entityToDTO(Member member) {
 
-        return new MemberDTO(
-                member.getEmployeeNo(),
-                member.getEmail(),
-                member.getPw(),
-                member.getName(),
-                member.getDepartment(),
-                member.getStatus().name(),
-                member.getMemberRoleList()
-                        .stream()
-                        .map(role -> role.name())
-                        .collect(Collectors.toList()));
-    }
+                return new MemberDTO(
+                                member.getEmployeeNo(),
+                                member.getEmail(),
+                                member.getPw(),
+                                member.getName(),
+                                member.getDepartment(),
+                                member.getStatus().name(),
+                                member.getPresenceStatus() == null
+                                                ? PresenceStatus.OFFLINE.name()
+                                                : member.getPresenceStatus().name(),
+                                member.getMemberRoleList()
+                                                .stream()
+                                                .map(role -> role.name())
+                                                .collect(Collectors.toList()));
+        }
 
-    default MemberResponseDTO entityToResponseDTO(Member member) {
+        default MemberResponseDTO entityToResponseDTO(Member member) {
 
-        return MemberResponseDTO.builder()
-                .employeeNo(member.getEmployeeNo())
-                .email(member.getEmail())
-                .name(member.getName())
-                .department(member.getDepartment())
-                .status(member.getStatus().name())
-                .roleNames(
-                        member.getMemberRoleList()
-                                .stream()
-                                .map(role -> role.name())
-                                .collect(Collectors.toList()))
-                .build();
-    }
+                return MemberResponseDTO.builder()
+                                .employeeNo(member.getEmployeeNo())
+                                .email(member.getEmail())
+                                .name(member.getName())
+                                .department(member.getDepartment())
+                                .status(member.getStatus().name())
+                                .presenceStatus(
+                                                member.getPresenceStatus() == null
+                                                                ? PresenceStatus.OFFLINE.name()
+                                                                : member.getPresenceStatus().name())
+                                .roleNames(
+                                                member.getMemberRoleList()
+                                                                .stream()
+                                                                .map(role -> role.name())
+                                                                .collect(Collectors.toList()))
+                                .build();
+        }
 }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.yujin.backend.member.dto.MemberResponseDTO;
 import org.yujin.backend.member.dto.MemberSearchDTO;
 import org.yujin.backend.common.dto.PageResponseDTO;
+import org.yujin.backend.member.domain.PresenceStatus;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.member.dto.MemberJoinDTO;
 import org.yujin.backend.member.dto.MemberModifyDTO;
@@ -52,6 +53,21 @@ public class MemberController {
 
         return memberService.get(
                 memberDTO.getUsername());
+    }
+
+    //현재상태 변경 (온라인/자리비움/오프라인)
+    @PutMapping("/me/presence")
+    public Map<String, String> changeMyPresenceStatus(
+            @AuthenticationPrincipal MemberDTO memberDTO,
+            @RequestParam("presenceStatus") PresenceStatus presenceStatus) {
+
+        memberService.changeMyPresenceStatus(
+                memberDTO.getUsername(),
+                presenceStatus);
+
+        return Map.of(
+                "result", "modified",
+                "presenceStatus", presenceStatus.name());
     }
 
     // 사원 정보 수정 + Role/Status 변경

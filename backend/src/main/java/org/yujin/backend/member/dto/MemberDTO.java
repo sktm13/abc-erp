@@ -17,6 +17,7 @@ public class MemberDTO extends User {
     private String name;
     private String department;
     private String status;
+    private String presenceStatus;
 
     private List<String> roleNames = new ArrayList<>();
 
@@ -27,6 +28,7 @@ public class MemberDTO extends User {
             String name,
             String department,
             String status,
+            String presenceStatus,
             List<String> roleNames
     ) {
         super(
@@ -56,6 +58,7 @@ public class MemberDTO extends User {
         dataMap.put("name", name);
         dataMap.put("department", department);
         dataMap.put("status", status);
+        dataMap.put("presenceStatus", presenceStatus);
         dataMap.put("roleNames", roleNames);
 
         return dataMap;

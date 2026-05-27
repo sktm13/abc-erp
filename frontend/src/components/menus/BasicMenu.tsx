@@ -1,8 +1,9 @@
 import { NavLink } from "react-router-dom";
 
 export default function BasicMenu() {
+
   const menus = [
-    { path: "/", icon: "🏠", name: "대시보드" },
+    { path: "/", icon: "🏠", name: "대시보드", end: true },
     { path: "/member/list", icon: "👥", name: "회원관리" },
     { path: "/worklog", icon: "📝", name: "근무일지" },
     { path: "/chat", icon: "💬", name: "채팅" },
@@ -16,6 +17,7 @@ export default function BasicMenu() {
         <NavLink
           key={menu.path}
           to={menu.path}
+          end={menu.end}
           className={({ isActive }) =>
             `
             flex items-center gap-3 px-5 py-4 rounded-2xl text-left

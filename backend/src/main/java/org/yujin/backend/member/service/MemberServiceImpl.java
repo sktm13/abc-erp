@@ -10,6 +10,7 @@ import org.yujin.backend.common.dto.PageResponseDTO;
 import org.yujin.backend.member.domain.Member;
 import org.yujin.backend.member.domain.MemberRole;
 import org.yujin.backend.member.domain.MemberStatus;
+import org.yujin.backend.member.domain.PresenceStatus;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.member.dto.MemberJoinDTO;
 import org.yujin.backend.member.dto.MemberModifyDTO;
@@ -139,6 +140,21 @@ public class MemberServiceImpl implements MemberService {
         claims.put("refreshToken", newRefreshToken);
 
         return claims;
+    }
+
+    @Override
+    public void changeMyPresenceStatus(
+            String employeeNo,
+            PresenceStatus presenceStatus) {
+
+        Member member = memberRepository.findById(employeeNo)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사원입니다."));
+
+        if (member.getStatus() == MemberStatus.RESIGNED) {
+            throw new RuntimeException("퇴사 처리된 사원은 상태를 변경할 수 없습니다.");
+        }
+
+        member.changePresenceStatus(presenceStatus);
     }
 
     private String generateEmployeeNo(String department) {
