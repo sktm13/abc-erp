@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 
 import BasicLayout from "../layouts/BasicLayout";
 import memberRouter from "./memberRouter";
+import worklogRouter from "./worklogRouter";
 
 const Loading = <div>Loading...</div>;
 
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
         ),
       },
       memberRouter(),
+      worklogRouter(),
     ],
   },
 ]);
