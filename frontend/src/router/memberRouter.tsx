@@ -1,11 +1,14 @@
 import { lazy, Suspense } from "react";
-import MemberReadPage from "../pages/member/MemberReadPage";
 
 const Loading = <div>Loading...</div>;
 
 const MemberListPage = lazy(() => import("../pages/member/MemberListPage"));
 const MemberRegisterPage = lazy(
   () => import("../pages/member/MemberRegisterPage")
+);
+const MemberReadPage = lazy(() => import("../pages/member/MemberReadPage"));
+const MemberModifyPage = lazy(
+  () => import("../pages/member/MemberModifyPage")
 );
 
 export default function memberRouter() {
@@ -36,7 +39,14 @@ export default function memberRouter() {
           </Suspense>
         ),
       },
-
+      {
+        path: "modify/:employeeNo",
+        element: (
+          <Suspense fallback={Loading}>
+            <MemberModifyPage />
+          </Suspense>
+        ),
+      },
     ],
   };
 }

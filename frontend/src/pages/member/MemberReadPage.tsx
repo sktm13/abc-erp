@@ -1,257 +1,207 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getMember, modifyMember } from "../../api/memberApi";
+import { getMember } from "../../api/memberApi";
 import useCustomLogin from "../../hooks/useCustomLogin";
 import type { MemberResponse } from "../../types/member";
 
-type MemberRole = "EMPLOYEE" | "MANAGER" | "ADMIN";
-type MemberStatus = "ACTIVE" | "LEAVE" | "RESIGNED";
+const departmentText = (department: string) => {
+  if (department === "DEV") return "개발팀";
+  if (department === "HR") return "인사팀";
+  if (department === "PUR") return "구매팀";
+  if (department === "FIN") return "재무팀";
+  if (department === "OPS") return "운영팀";
+
+  return department;
+};
+
+const statusText = (status: string) => {
+  if (status === "ACTIVE") return "재직";
+  if (status === "LEAVE") return "휴직";
+  if (status === "RESIGNED") return "퇴사";
+
+  return status;
+};
+
+const presenceText = (presenceStatus?: string) => {
+  if (presenceStatus === "ONLINE") return "온라인";
+  if (presenceStatus === "AWAY") return "자리비움";
+  if (presenceStatus === "OFFLINE") return "오프라인";
+
+  return "오프라인";
+};
+
+const roleText = (role: string) => {
+  if (role === "ADMIN") return "관리자";
+  if (role === "MANAGER") return "팀장급";
+  if (role === "EMPLOYEE") return "사원";
+
+  return role;
+};
+
+const statusClass = (status: string) => {
+  if (status === "ACTIVE") return "bg-emerald-50 text-emerald-600";
+  if (status === "LEAVE") return "bg-amber-50 text-amber-600";
+  if (status === "RESIGNED") return "bg-slate-100 text-slate-500";
+
+  return "bg-slate-100 text-slate-500";
+};
+
+const presenceClass = (presenceStatus?: string) => {
+  if (presenceStatus === "ONLINE") return "bg-emerald-50 text-emerald-600";
+  if (presenceStatus === "AWAY") return "bg-amber-50 text-amber-600";
+  if (presenceStatus === "OFFLINE") return "bg-slate-100 text-slate-500";
+
+  return "bg-slate-100 text-slate-500";
+};
+
+const roleClass = (role: string) => {
+  if (role === "ADMIN") return "bg-purple-50 text-purple-600";
+  if (role === "MANAGER") return "bg-blue-50 text-blue-600";
+
+  return "bg-slate-100 text-slate-600";
+};
 
 export default function MemberReadPage() {
-    const { employeeNo } = useParams();
+  const { employeeNo } = useParams();
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const { loginState } = useCustomLogin();
+  const { loginState } = useCustomLogin();
 
-    const isAdmin = loginState.roleNames?.includes("ADMIN");
+  const isAdmin = loginState.roleNames?.includes("ADMIN");
 
-    const [member, setMember] = useState<MemberResponse | null>(null);
+  const [member, setMember] = useState<MemberResponse | null>(null);
 
-    const [email, setEmail] = useState("");
-    const [name, setName] = useState("");
-    const [department, setDepartment] = useState("");
-    const [status, setStatus] = useState<MemberStatus>("ACTIVE");
-    const [roleList, setRoleList] = useState<MemberRole[]>([]);
-
-    const fetchMember = async () => {
-        if (!employeeNo) {
-            return;
-        }
-
-        try {
-            const result = await getMember(employeeNo);
-
-            setMember(result);
-            setEmail(result.email);
-            setName(result.name);
-            setDepartment(result.department);
-            setStatus(result.status);
-            setRoleList(result.roleNames as MemberRole[]);
-        } catch (e) {
-            console.error(e);
-            alert("사원 정보를 불러오지 못했습니다.");
-            navigate("/member/list");
-        }
-    };
-
-    useEffect(() => {
-        fetchMember();
-    }, [employeeNo]);
-
-    const toggleRole = (role: MemberRole) => {
-        // EMPLOYEE는 기본 권한이라 제거 불가
-        if (role === "EMPLOYEE") {
-            return;
-        }
-
-        if (roleList.includes(role)) {
-            setRoleList(roleList.filter((r) => r !== role));
-        } else {
-            setRoleList([...roleList, role]);
-        }
-    };
-
-    const handleModify = async () => {
-        if (!employeeNo) {
-            return;
-        }
-
-        if (!email || !name || !department || !status) {
-            alert("필수 항목을 입력해주세요.");
-            return;
-        }
-
-        const finalRoleList: MemberRole[] = roleList.includes("EMPLOYEE")
-            ? roleList
-            : ["EMPLOYEE", ...roleList];
-
-        try {
-            await modifyMember(employeeNo, {
-                email,
-                name,
-                department,
-                status,
-                roleList: finalRoleList,
-            });
-
-            alert("사원 정보가 수정되었습니다.");
-            navigate("/member/list");
-        } catch (e: unknown) {
-            console.error(e);
-
-            if (axios.isAxiosError(e)) {
-                const message = e.response?.data?.message;
-
-                if (message) {
-                    alert(message);
-                    return;
-                }
-            }
-
-            alert("사원 정보 수정에 실패했습니다.");
-        }
-    };
-
-    if (!member) {
-        return <div>Loading...</div>;
+  const fetchMember = async () => {
+    if (!employeeNo) {
+      return;
     }
 
+    try {
+      const result = await getMember(employeeNo);
+
+      setMember(result);
+    } catch (e) {
+      console.error(e);
+      alert("사원 정보를 불러오지 못했습니다.");
+      navigate("/member/list");
+    }
+  };
+
+  useEffect(() => {
+    fetchMember();
+  }, [employeeNo]);
+
+  if (!member) {
     return (
-        <div>
-            <div className="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-800">사원 상세</h1>
-                    <p className="text-slate-400 mt-2">사원 정보 조회 및 수정</p>
-                </div>
-
-                <button
-                    onClick={() => navigate("/member/list")}
-                    className="px-5 py-3 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
-                >
-                    목록으로
-                </button>
-            </div>
-
-            <div className="bg-white rounded-[28px] border border-slate-200 p-8 shadow-sm max-w-3xl">
-                <div className="space-y-5">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">
-                            사번
-                        </label>
-
-                        <input
-                            type="text"
-                            value={member.employeeNo}
-                            disabled
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">
-                            이름
-                        </label>
-
-                        <input
-                            type="text"
-                            value={name}
-                            disabled={!isAdmin}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 disabled:bg-slate-50 disabled:text-slate-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">
-                            이메일
-                        </label>
-
-                        <input
-                            type="email"
-                            value={email}
-                            disabled={!isAdmin}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 disabled:bg-slate-50 disabled:text-slate-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">
-                            부서
-                        </label>
-
-                        <select
-                            value={department}
-                            disabled={!isAdmin}
-                            onChange={(e) => setDepartment(e.target.value)}
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 disabled:bg-slate-50 disabled:text-slate-500"
-                        >
-                            <option value="DEV">개발팀</option>
-                            <option value="HR">인사팀</option>
-                            <option value="PUR">구매팀</option>
-                            <option value="FIN">재무팀</option>
-                            <option value="OPS">운영팀</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">
-                            재직 상태
-                        </label>
-
-                        <select
-                            value={status}
-                            disabled={!isAdmin}
-                            onChange={(e) => setStatus(e.target.value as MemberStatus)}
-                            className="w-full px-4 py-3 rounded-2xl border border-slate-200 disabled:bg-slate-50 disabled:text-slate-500"
-                        >
-                            <option value="ACTIVE">재직</option>
-                            <option value="LEAVE">휴직</option>
-                            <option value="RESIGNED">퇴사</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-3">
-                            권한
-                        </label>
-
-                        <div className="flex gap-3">
-                            {(["EMPLOYEE", "MANAGER", "ADMIN"] as MemberRole[]).map(
-                                (role) => (
-                                    <button
-                                        key={role}
-                                        type="button"
-                                        disabled={!isAdmin || role === "EMPLOYEE"}
-                                        onClick={() => toggleRole(role)}
-                                        className={`px-4 py-2 rounded-2xl text-sm font-semibold border transition ${roleList.includes(role)
-                                                ? "bg-blue-50 text-blue-600 border-blue-100"
-                                                : "bg-white text-slate-500 border-slate-200"
-                                            } disabled:opacity-70`}
-                                    >
-                                        {role}
-                                    </button>
-                                )
-                            )}
-                        </div>
-
-                        <p className="text-xs text-slate-400 mt-2">
-                            EMPLOYEE 권한은 기본 권한으로 유지됩니다.
-                        </p>
-                    </div>
-
-                    {isAdmin && (
-                        <div className="flex justify-end gap-3 pt-4">
-                            <button
-                                onClick={() => navigate("/member/list")}
-                                className="px-5 py-3 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
-                            >
-                                취소
-                            </button>
-
-                            <button
-                                onClick={handleModify}
-                                className="px-5 py-3 rounded-2xl bg-[#3B82F6] text-white font-semibold hover:bg-blue-500 transition"
-                            >
-                                수정
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
+      <div className="h-full flex items-center justify-center text-slate-400">
+        Loading...
+      </div>
     );
+  }
+
+  return (
+    <div className="h-full min-h-0 flex flex-col">
+      <div className="shrink-0 mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">사원 상세</h1>
+          <p className="text-slate-400 mt-1">사원 정보를 조회합니다.</p>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate("/member/list")}
+            className="px-5 py-3 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
+          >
+            목록으로
+          </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => navigate(`/member/modify/${member.employeeNo}`)}
+              className="px-5 py-3 rounded-2xl bg-[#3B82F6] text-white font-semibold hover:bg-blue-500 transition"
+            >
+              수정
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 bg-white rounded-[24px] border border-slate-200 p-6 shadow-sm overflow-hidden flex flex-col">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2 bg-slate-50 rounded-2xl border border-slate-200 p-5">
+            <p className="text-sm text-slate-400 mb-1">사번</p>
+            <p className="text-xl font-bold text-slate-800">
+              {member.employeeNo}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-5">
+            <p className="text-sm text-slate-400 mb-1">이름</p>
+            <p className="text-lg font-semibold text-slate-800">
+              {member.name}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-5">
+            <p className="text-sm text-slate-400 mb-1">이메일</p>
+            <p className="text-lg font-semibold text-slate-800">
+              {member.email}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-5">
+            <p className="text-sm text-slate-400 mb-1">부서</p>
+            <p className="text-lg font-semibold text-slate-800">
+              {departmentText(member.department)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-5">
+            <p className="text-sm text-slate-400 mb-2">재직 상태</p>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${statusClass(
+                member.status
+              )}`}
+            >
+              {statusText(member.status)}
+            </span>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-5">
+            <p className="text-sm text-slate-400 mb-2">현재 상태</p>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${presenceClass(
+                member.presenceStatus
+              )}`}
+            >
+              {presenceText(member.presenceStatus)}
+            </span>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-5">
+            <p className="text-sm text-slate-400 mb-2">권한</p>
+
+            <div className="flex gap-2 flex-wrap">
+              {member.roleNames.map((role) => (
+                <span
+                  key={role}
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${roleClass(
+                    role
+                  )}`}
+                >
+                  {roleText(role)}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-6 text-sm text-slate-400">
+          사원 정보 수정은 관리자 권한에서만 가능합니다.
+        </div>
+      </div>
+    </div>
+  );
 }

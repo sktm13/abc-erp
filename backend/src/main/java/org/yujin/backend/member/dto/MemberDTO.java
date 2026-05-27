@@ -45,6 +45,7 @@ public class MemberDTO extends User {
         this.name = name;
         this.department = department;
         this.status = status;
+        this.presenceStatus = presenceStatus;
         this.roleNames = roleNames;
     }
 

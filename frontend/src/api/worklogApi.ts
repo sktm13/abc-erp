@@ -38,3 +38,18 @@ export const getMyWorkLogs = async (
 
   return res.data;
 };
+
+export const getMemberWorkLogs = async (
+  employeeNo: string,
+  year: number,
+  month: number
+): Promise<WorkLog[]> => {
+  const res = await jwtAxios.get(`/api/worklogs/member/${employeeNo}`, {
+    params: {
+      year,
+      month,
+    },
+  });
+
+  return res.data;
+};

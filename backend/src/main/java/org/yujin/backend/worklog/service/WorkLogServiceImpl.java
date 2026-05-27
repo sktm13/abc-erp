@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.yujin.backend.member.domain.Member;
+import org.yujin.backend.member.domain.MemberRole;
 import org.yujin.backend.member.repository.MemberRepository;
 import org.yujin.backend.worklog.domain.WorkLog;
 import org.yujin.backend.worklog.domain.WorkLogStatus;
@@ -34,7 +35,6 @@ public class WorkLogServiceImpl implements WorkLogService {
         Member member = memberRepository.findById(employeeNo)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사원입니다."));
 
-        // 이미 근무 중인 기록이 있으면 다시 시작 불가
         workLogRepository.findByMemberAndStatus(member, WorkLogStatus.WORKING)
                 .ifPresent(workLog -> {
                     throw new RuntimeException("이미 근무 시작 상태입니다.");
@@ -136,6 +136,58 @@ public class WorkLogServiceImpl implements WorkLogService {
         List<WorkLog> workLogs =
                 workLogRepository.findByMemberAndWorkDateBetweenOrderByWorkDateAscStartTimeAsc(
                         member,
+                        startDate,
+                        endDate
+                );
+
+        return workLogs.stream()
+                .map(this::entityToDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WorkLogDTO> getMemberWorkLogs(
+            String requesterEmployeeNo,
+            String targetEmployeeNo,
+            int year,
+            int month
+    ) {
+
+        Member requester = memberRepository.getWithRoles(requesterEmployeeNo);
+
+        if (requester == null) {
+            throw new RuntimeException("요청한 사원을 찾을 수 없습니다.");
+        }
+
+        Member target = memberRepository.findById(targetEmployeeNo)
+                .orElseThrow(() -> new RuntimeException("조회 대상 사원을 찾을 수 없습니다."));
+
+        boolean isSelf =
+                requester.getEmployeeNo().equals(target.getEmployeeNo());
+
+        boolean isHr =
+                "HR".equals(requester.getDepartment());
+
+        boolean isManagerOrAdminSameDepartment =
+                (
+                        requester.getMemberRoleList().contains(MemberRole.MANAGER)
+                                || requester.getMemberRoleList().contains(MemberRole.ADMIN)
+                )
+                        && requester.getDepartment().equals(target.getDepartment());
+
+        if (!isSelf && !isHr && !isManagerOrAdminSameDepartment) {
+            throw new RuntimeException("해당 사원의 근무일지를 조회할 권한이 없습니다.");
+        }
+
+        YearMonth yearMonth = YearMonth.of(year, month);
+
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        List<WorkLog> workLogs =
+                workLogRepository.findByMemberAndWorkDateBetweenOrderByWorkDateAscStartTimeAsc(
+                        target,
                         startDate,
                         endDate
                 );

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,55 +24,62 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/worklogs")
 public class WorkLogController {
 
-    private final WorkLogService workLogService;
+        private final WorkLogService workLogService;
 
-    // 현재 근무 중 여부 조회
-    @GetMapping("/current")
-    public WorkLogCurrentResponseDTO current(
-            @AuthenticationPrincipal MemberDTO memberDTO
-    ) {
+        // 현재 근무 중 여부 조회
+        @GetMapping("/current")
+        public WorkLogCurrentResponseDTO current(
+                        @AuthenticationPrincipal MemberDTO memberDTO) {
 
-        return workLogService.getCurrentWorkStatus(
-                memberDTO.getUsername()
-        );
-    }
+                return workLogService.getCurrentWorkStatus(
+                                memberDTO.getUsername());
+        }
 
-    // 근무 시작
-    @PostMapping("/start")
-    public WorkLogCurrentResponseDTO start(
-            @AuthenticationPrincipal MemberDTO memberDTO
-    ) {
+        // 근무 시작
+        @PostMapping("/start")
+        public WorkLogCurrentResponseDTO start(
+                        @AuthenticationPrincipal MemberDTO memberDTO) {
 
-        return workLogService.startWork(
-                memberDTO.getUsername()
-        );
-    }
+                return workLogService.startWork(
+                                memberDTO.getUsername());
+        }
 
-    // 근무 종료
-    @PostMapping("/end")
-    public WorkLogDTO end(
-            @AuthenticationPrincipal MemberDTO memberDTO,
-            @RequestBody WorkLogEndRequestDTO requestDTO
-    ) {
+        // 근무 종료
+        @PostMapping("/end")
+        public WorkLogDTO end(
+                        @AuthenticationPrincipal MemberDTO memberDTO,
+                        @RequestBody WorkLogEndRequestDTO requestDTO) {
 
-        return workLogService.endWork(
-                memberDTO.getUsername(),
-                requestDTO
-        );
-    }
+                return workLogService.endWork(
+                                memberDTO.getUsername(),
+                                requestDTO);
+        }
 
-    // 내 월별 근무일지 조회
-    @GetMapping("/me")
-    public List<WorkLogDTO> myWorkLogs(
-            @AuthenticationPrincipal MemberDTO memberDTO,
-            @RequestParam("year") int year,
-            @RequestParam("month") int month
-    ) {
+        // 내 월별 근무일지 조회
+        @GetMapping("/me")
+        public List<WorkLogDTO> myWorkLogs(
+                        @AuthenticationPrincipal MemberDTO memberDTO,
+                        @RequestParam("year") int year,
+                        @RequestParam("month") int month) {
 
-        return workLogService.getMyWorkLogs(
-                memberDTO.getUsername(),
-                year,
-                month
-        );
-    }
+                return workLogService.getMyWorkLogs(
+                                memberDTO.getUsername(),
+                                year,
+                                month);
+        }
+
+        // 특정 사원의 월별 근무일지 조회
+        @GetMapping("/member/{employeeNo}")
+        public List<WorkLogDTO> memberWorkLogs(
+                        @AuthenticationPrincipal MemberDTO memberDTO,
+                        @PathVariable("employeeNo") String employeeNo,
+                        @RequestParam("year") int year,
+                        @RequestParam("month") int month) {
+
+                return workLogService.getMemberWorkLogs(
+                                memberDTO.getUsername(),
+                                employeeNo,
+                                year,
+                                month);
+        }
 }

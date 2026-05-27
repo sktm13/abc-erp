@@ -2,15 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { getMemberList } from "../../api/memberApi";
-import useCustomLogin from "../../hooks/useCustomLogin";
 import type { MemberResponse, PageResponse } from "../../types/member";
 
 export default function MemberListPage() {
   const navigate = useNavigate();
-
-  const { loginState } = useCustomLogin();
-
-  const isAdmin = loginState.roleNames?.includes("ADMIN");
 
   const [data, setData] = useState<PageResponse<MemberResponse> | null>(null);
 
@@ -80,32 +75,42 @@ export default function MemberListPage() {
     return "bg-slate-100 text-slate-500";
   };
 
-  return (
-    <div>
-      {/* Title */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">회원관리</h1>
-          <p className="text-slate-400 mt-2">사원 목록 조회 및 검색</p>
-        </div>
+  const highestRole = (roleNames: string[]) => {
+    if (roleNames.includes("ADMIN")) {
+      return {
+        label: "관리자",
+        className: "bg-purple-50 text-purple-600",
+      };
+    }
 
-        {isAdmin && (
-          <button
-            onClick={() => navigate("/member/register")}
-            className="px-5 py-3 rounded-2xl bg-[#3B82F6] text-white font-semibold hover:bg-blue-500 transition"
-          >
-            + 사원등록
-          </button>
-        )}
+    if (roleNames.includes("MANAGER")) {
+      return {
+        label: "팀장급",
+        className: "bg-blue-50 text-blue-600",
+      };
+    }
+
+    return {
+      label: "사원",
+      className: "bg-slate-100 text-slate-600",
+    };
+  };
+
+  return (
+    <div className="h-full min-h-0 flex flex-col">
+      <div className="shrink-0 mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">사원목록</h1>
+          <p className="text-slate-400 mt-1">사원 정보 조회 및 검색</p>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-[28px] border border-slate-200 p-6 shadow-sm mb-6">
+      <div className="shrink-0 bg-white rounded-[24px] border border-slate-200 p-4 shadow-sm mb-4">
         <div className="grid grid-cols-5 gap-3">
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="px-4 py-3 rounded-2xl border border-slate-200"
+            className="px-4 py-2.5 rounded-2xl border border-slate-200 text-sm"
           >
             <option value="">전체 부서</option>
             <option value="DEV">개발팀</option>
@@ -118,7 +123,7 @@ export default function MemberListPage() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="px-4 py-3 rounded-2xl border border-slate-200"
+            className="px-4 py-2.5 rounded-2xl border border-slate-200 text-sm"
           >
             <option value="">전체 상태</option>
             <option value="ACTIVE">재직</option>
@@ -129,7 +134,7 @@ export default function MemberListPage() {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="px-4 py-3 rounded-2xl border border-slate-200"
+            className="px-4 py-2.5 rounded-2xl border border-slate-200 text-sm"
           >
             <option value="">전체 권한</option>
             <option value="EMPLOYEE">사원</option>
@@ -142,71 +147,66 @@ export default function MemberListPage() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="사번 / 이름 / 이메일 검색"
-            className="px-4 py-3 rounded-2xl border border-slate-200"
+            className="px-4 py-2.5 rounded-2xl border border-slate-200 text-sm"
           />
 
           <button
             onClick={handleSearch}
-            className="px-5 py-3 rounded-2xl bg-[#1E293B] text-white font-semibold hover:bg-[#334155] transition"
+            className="px-5 py-2.5 rounded-2xl bg-[#1E293B] text-white font-semibold hover:bg-[#334155] transition text-sm"
           >
             검색
           </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-[28px] border border-slate-200 shadow-sm overflow-hidden">
-        <table className="w-full">
+      <div className="flex-1 min-h-0 bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden">
+        <table className="w-full table-fixed">
           <thead className="bg-slate-50">
             <tr className="text-left text-slate-500 text-sm">
-              <th className="px-6 py-4">사번</th>
-              <th className="px-6 py-4">이름</th>
-              <th className="px-6 py-4">이메일</th>
-              <th className="px-6 py-4">부서</th>
-              <th className="px-6 py-4">권한</th>
-              <th className="px-6 py-4">재직상태</th>
-              <th className="px-6 py-4">현재상태</th>
+              <th className="px-4 py-3">사번</th>
+              <th className="px-4 py-3">이름</th>
+              <th className="px-4 py-3">이메일</th>
+              <th className="px-4 py-3">부서</th>
+              <th className="px-4 py-3">권한</th>
+              <th className="px-4 py-3">재직상태</th>
+              <th className="px-4 py-3">현재상태</th>
             </tr>
           </thead>
 
           <tbody>
             {data?.dtoList.map((member) => {
               const presenceStatus = member.presenceStatus || "OFFLINE";
+              const role = highestRole(member.roleNames);
 
               return (
                 <tr
                   key={member.employeeNo}
                   onClick={() => navigate(`/member/read/${member.employeeNo}`)}
-                  className="border-t border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+                  className="h-[54px] border-b border-slate-200 hover:bg-slate-50 transition cursor-pointer text-sm"
                 >
-                  <td className="px-6 py-4 font-medium text-slate-700">
+                  <td className="px-4 py-2 font-medium text-slate-700 truncate">
                     {member.employeeNo}
                   </td>
 
-                  <td className="px-6 py-4">{member.name}</td>
+                  <td className="px-4 py-2 truncate">{member.name}</td>
 
-                  <td className="px-6 py-4 text-slate-500">
+                  <td className="px-4 py-2 text-slate-500 truncate">
                     {member.email}
                   </td>
 
-                  <td className="px-6 py-4">{member.department}</td>
+                  <td className="px-4 py-2">{member.department}</td>
 
-                  <td className="px-6 py-4">
-                    <div className="flex gap-1 flex-wrap">
-                      {member.roleNames.map((role) => (
-                        <span
-                          key={role}
-                          className="px-2 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold"
-                        >
-                          {role}
-                        </span>
-                      ))}
-                    </div>
+                  <td className="px-4 py-2">
+                    <span
+                      className={`px-3 py-1 rounded-full text-[11px] font-semibold ${role.className}`}
+                    >
+                      {role.label}
+                    </span>
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClass(
+                      className={`px-3 py-1 rounded-full text-[11px] font-semibold ${statusClass(
                         member.status
                       )}`}
                     >
@@ -214,9 +214,9 @@ export default function MemberListPage() {
                     </span>
                   </td>
 
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${presenceClass(
+                      className={`px-3 py-1 rounded-full text-[11px] font-semibold ${presenceClass(
                         presenceStatus
                       )}`}
                     >
@@ -236,9 +236,8 @@ export default function MemberListPage() {
         )}
       </div>
 
-      {/* Paging */}
       {data && (
-        <div className="flex justify-center gap-2 mt-6">
+        <div className="shrink-0 flex justify-center gap-2 mt-4">
           {data.prev && (
             <button
               onClick={() => setPage(data.prevPage)}

@@ -16,7 +16,6 @@ export default function BasicLayout() {
     moveToLoginReturn,
   } = useCustomLogin();
 
-  // 새로고침 직후 쿠키 → Redux 복구 중이면 redirect하지 않음
   if (isRestoring) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#F8FAFC] text-slate-500">
@@ -25,7 +24,6 @@ export default function BasicLayout() {
     );
   }
 
-  // 쿠키도 없고 Redux 로그인 상태도 아니면 로그인 페이지로 이동
   if (!isLogin) {
     return moveToLoginReturn();
   }
@@ -58,9 +56,7 @@ export default function BasicLayout() {
     },
   ];
 
-  const handlePresenceChange = async (
-    presenceStatus: PresenceStatus
-  ) => {
+  const handlePresenceChange = async (presenceStatus: PresenceStatus) => {
     try {
       await changeMyPresenceStatus(presenceStatus);
 
@@ -76,8 +72,8 @@ export default function BasicLayout() {
 
   return (
     <div className="h-screen bg-[#F8FAFC] p-5 flex gap-5 overflow-hidden">
-      <aside className="w-270px bg-[#1E293B] rounded-[34px] p-5 flex flex-col shadow-xl">
-        <div className="mb-10 px-3 pt-2">
+      <aside className="w-270px shrink-0 bg-[#1E293B] rounded-[34px] p-5 flex flex-col shadow-xl overflow-hidden">
+        <div className="mb-10 px-3 pt-2 shrink-0">
           <div className="w-12 h-12 rounded-2xl bg-[#3B82F6] flex items-center justify-center text-white font-bold mb-4">
             A
           </div>
@@ -91,9 +87,11 @@ export default function BasicLayout() {
           </p>
         </div>
 
-        <BasicMenu />
+        <div className="flex-1 min-h-0">
+          <BasicMenu />
+        </div>
 
-        <div className="mt-auto rounded-[28px] p-4 bg-[#334155] border border-slate-500/30">
+        <div className="mt-auto shrink-0 rounded-[28px] p-4 bg-[#334155] border border-slate-500/30">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-[#3B82F6] flex items-center justify-center text-white font-bold">
               {loginState.name?.charAt(0) || "U"}
@@ -112,8 +110,8 @@ export default function BasicLayout() {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col gap-5 overflow-hidden">
-        <header className="h-20 bg-white rounded-[30px] px-8 flex items-center justify-between shadow-sm border border-slate-200">
+      <div className="flex-1 min-h-0 flex flex-col gap-5 overflow-hidden">
+        <header className="h-20 shrink-0 bg-white rounded-[30px] px-8 flex items-center justify-between shadow-sm border border-slate-200">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">
               Dashboard
@@ -168,7 +166,7 @@ export default function BasicLayout() {
           </div>
         </header>
 
-        <main className="flex-1 bg-white rounded-[34px] shadow-sm border border-slate-200 p-8 overflow-auto">
+        <main className="flex-1 min-h-0 bg-white rounded-[34px] shadow-sm border border-slate-200 p-6 overflow-hidden">
           <Outlet />
         </main>
       </div>
