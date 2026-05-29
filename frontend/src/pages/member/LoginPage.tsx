@@ -1,11 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useCustomLogin from "../../hooks/useCustomLogin";
 
 export default function LoginPage() {
   const [employeeNo, setEmployeeNo] = useState("");
   const [pw, setPw] = useState("");
 
-  const { doLogin, loginStatus, moveToPath } = useCustomLogin();
+  const {
+    doLogin,
+    loginStatus,
+    loginErrorMessage,
+    moveToPath,
+  } = useCustomLogin();
+
+  const errorLines = useMemo(() => {
+    if (!loginErrorMessage) {
+      return [];
+    }
+
+    return loginErrorMessage.split("\n");
+  }, [loginErrorMessage]);
+
+  const mainErrorMessage =
+    errorLines.length > 0 ? errorLines[0] : "";
+
+  const subErrorMessage =
+    errorLines.length > 1 ? errorLines.slice(1).join("\n") : "";
 
   const handleLogin = () => {
     if (!employeeNo || !pw) {
@@ -19,10 +38,6 @@ export default function LoginPage() {
   useEffect(() => {
     if (loginStatus === "fulfilled" || loginStatus === "saved") {
       moveToPath("/");
-    }
-
-    if (loginStatus === "rejected") {
-      alert("로그인에 실패했습니다.");
     }
   }, [loginStatus]);
 
@@ -43,6 +58,20 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {loginStatus === "rejected" && mainErrorMessage && (
+          <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-center">
+            <p className="text-sm font-bold text-red-500">
+              {mainErrorMessage}
+            </p>
+
+            {subErrorMessage && (
+              <p className="text-xs text-red-400 mt-1 whitespace-pre-wrap">
+                {subErrorMessage}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="space-y-4">
           <input
             type="text"
@@ -56,6 +85,11 @@ export default function LoginPage() {
             type="password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleLogin();
+              }
+            }}
             placeholder="비밀번호"
             className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />

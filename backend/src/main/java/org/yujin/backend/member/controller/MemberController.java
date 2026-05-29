@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.yujin.backend.member.dto.ChangePasswordDTO;
 import org.yujin.backend.member.dto.MemberResponseDTO;
 import org.yujin.backend.member.dto.MemberSearchDTO;
 import org.yujin.backend.common.dto.PageResponseDTO;
@@ -55,7 +56,7 @@ public class MemberController {
                 memberDTO.getUsername());
     }
 
-    //현재상태 변경 (온라인/자리비움/오프라인)
+    // 현재상태 변경 (온라인/자리비움/오프라인)
     @PutMapping("/me/presence")
     public Map<String, String> changeMyPresenceStatus(
             @AuthenticationPrincipal MemberDTO memberDTO,
@@ -68,6 +69,19 @@ public class MemberController {
         return Map.of(
                 "result", "modified",
                 "presenceStatus", presenceStatus.name());
+    }
+
+    // 내 비밀번호 변경
+    @PutMapping("/me/password")
+    public Map<String, String> changeMyPassword(
+            @AuthenticationPrincipal MemberDTO memberDTO,
+            @RequestBody ChangePasswordDTO dto) {
+
+        memberService.changeMyPassword(
+                memberDTO.getUsername(),
+                dto);
+
+        return Map.of("result", "modified");
     }
 
     // 사원 정보 수정 + Role/Status 변경

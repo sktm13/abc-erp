@@ -29,7 +29,8 @@ public class MemberSearchImpl extends QuerydslRepositorySupport implements Membe
 
         Pageable pageable = PageRequest.of(
                 searchDTO.getPage() - 1,
-                searchDTO.getSize());
+                searchDTO.getSize()
+        );
 
         QMember member = QMember.member;
 
@@ -41,7 +42,8 @@ public class MemberSearchImpl extends QuerydslRepositorySupport implements Membe
             builder.and(
                     member.employeeNo.contains(keyword)
                             .or(member.name.contains(keyword))
-                            .or(member.email.contains(keyword)));
+                            .or(member.email.contains(keyword))
+            );
         }
 
         if (searchDTO.getDepartment() != null && !searchDTO.getDepartment().isBlank()) {
@@ -52,71 +54,75 @@ public class MemberSearchImpl extends QuerydslRepositorySupport implements Membe
             builder.and(member.status.eq(searchDTO.getStatus()));
         }
 
-        if (searchDTO.getRole() != null) {
-            builder.and(member.memberRoleList.any().eq(searchDTO.getRole()));
-        }
-
+        /*
+         * 주의:
+         * memberRoleList는 ElementCollection이다.
+         *
+         * 이 컬렉션을 where/orderBy에서 any()로 여러 번 사용한 상태에서
+         * DB 페이징을 걸면 조인 결과 row 수 기준으로 페이징이 먼저 적용되어
+         * 실제 사원 목록이 1페이지 1명, 2페이지 3명처럼 깨질 수 있다.
+         *
+         * 그래서 기본 조건(keyword / department / status)만 DB에서 조회하고,
+         * 권한 필터 / 권한 정렬 / 최종 페이징은 Java에서 처리한다.
+         */
         JPQLQuery<Member> query = from(member)
                 .where(builder);
 
-        /*
-         * 기본 정렬 기준
-         *
-         * 1순위 재직상태:
-         * ACTIVE(재직) > LEAVE(휴직) > RESIGNED(퇴사)
-         *
-         * 2순위 권한:
-         * ADMIN(관리자) > MANAGER(팀장급) > EMPLOYEE(사원)
-         *
-         * 3순위 입사년도 빠른 순:
-         * ABC-21-DEV-001 > ABC-22-DEV-001 > ABC-26-DEV-001
-         *
-         * 4순위 사번 낮은 순
-         */
-        List<Member> sortedMemberList = query.fetch()
-                .stream()
-                .distinct()
-                .sorted(
-                        Comparator
-                                .comparingInt(this::statusOrder)
-                                .thenComparingInt(this::roleOrder)
-                                .thenComparingInt(this::joinYearOrder)
-                                .thenComparing(Member::getEmployeeNo)
-                )
-                .toList();
+        List<Member> fetchedList = query.fetch();
 
-        long totalCount = sortedMemberList.size();
+        List<Member> filteredAndSortedList =
+                fetchedList.stream()
+                        .filter(m -> matchesHighestRoleFilter(
+                                m,
+                                searchDTO.getRole()
+                        ))
+                        .sorted(
+                                Comparator
+                                        .comparingInt(this::statusOrder)
+                                        .thenComparingInt(this::highestRoleOrder)
+                                        .thenComparingInt(this::hireYearOrder)
+                                        .thenComparing(
+                                                Member::getEmployeeNo,
+                                                Comparator.nullsLast(String::compareTo)
+                                        )
+                        )
+                        .toList();
+
+        long totalCount = filteredAndSortedList.size();
 
         int start = (int) pageable.getOffset();
-
         int end = Math.min(
                 start + pageable.getPageSize(),
-                sortedMemberList.size()
+                filteredAndSortedList.size()
         );
 
-        List<Member> memberList =
-                start >= sortedMemberList.size()
+        List<Member> pagedMemberList =
+                start >= filteredAndSortedList.size()
                         ? List.of()
-                        : sortedMemberList.subList(start, end);
+                        : filteredAndSortedList.subList(start, end);
 
-        List<MemberResponseDTO> dtoList = memberList.stream()
-                .map(m -> MemberResponseDTO.builder()
-                        .employeeNo(m.getEmployeeNo())
-                        .email(m.getEmail())
-                        .name(m.getName())
-                        .department(m.getDepartment())
-                        .status(m.getStatus().name())
-                        .presenceStatus(
-                                m.getPresenceStatus() == null
-                                        ? "OFFLINE"
-                                        : m.getPresenceStatus().name())
-                        .roleNames(
-                                m.getMemberRoleList()
-                                        .stream()
-                                        .map(role -> role.name())
-                                        .toList())
-                        .build())
-                .toList();
+        List<MemberResponseDTO> dtoList =
+                pagedMemberList.stream()
+                        .map(m -> MemberResponseDTO.builder()
+                                .employeeNo(m.getEmployeeNo())
+                                .email(m.getEmail())
+                                .name(m.getName())
+                                .department(m.getDepartment())
+                                .status(m.getStatus().name())
+                                .presenceStatus(
+                                        m.getPresenceStatus() == null
+                                                ? "OFFLINE"
+                                                : m.getPresenceStatus().name()
+                                )
+                                .roleNames(
+                                        m.getMemberRoleList()
+                                                .stream()
+                                                .map(role -> role.name())
+                                                .toList()
+                                )
+                                .build()
+                        )
+                        .toList();
 
         return PageResponseDTO.<MemberResponseDTO>withAll()
                 .dtoList(dtoList)
@@ -125,52 +131,91 @@ public class MemberSearchImpl extends QuerydslRepositorySupport implements Membe
                 .build();
     }
 
-    private int statusOrder(Member member) {
+    private boolean matchesHighestRoleFilter(
+            Member member,
+            MemberRole searchRole
+    ) {
 
-        if (member.getStatus() == MemberStatus.ACTIVE) {
-            return 1;
+        if (searchRole == null) {
+            return true;
         }
 
-        if (member.getStatus() == MemberStatus.LEAVE) {
-            return 2;
-        }
-
-        if (member.getStatus() == MemberStatus.RESIGNED) {
-            return 3;
-        }
-
-        return 4;
+        return getHighestRole(member) == searchRole;
     }
 
-    private int roleOrder(Member member) {
+    private MemberRole getHighestRole(
+            Member member
+    ) {
 
         if (member.getMemberRoleList().contains(MemberRole.ADMIN)) {
-            return 1;
+            return MemberRole.ADMIN;
         }
 
         if (member.getMemberRoleList().contains(MemberRole.MANAGER)) {
+            return MemberRole.MANAGER;
+        }
+
+        return MemberRole.EMPLOYEE;
+    }
+
+    private int statusOrder(
+            Member member
+    ) {
+
+        MemberStatus status = member.getStatus();
+
+        if (status == MemberStatus.ACTIVE) {
+            return 1;
+        }
+
+        if (status == MemberStatus.LEAVE) {
             return 2;
         }
 
-        if (member.getMemberRoleList().contains(MemberRole.EMPLOYEE)) {
+        if (status == MemberStatus.RESIGNED) {
             return 3;
         }
 
         return 4;
     }
 
-    private int joinYearOrder(Member member) {
+    private int highestRoleOrder(
+            Member member
+    ) {
+
+        MemberRole highestRole = getHighestRole(member);
+
+        if (highestRole == MemberRole.ADMIN) {
+            return 1;
+        }
+
+        if (highestRole == MemberRole.MANAGER) {
+            return 2;
+        }
+
+        return 3;
+    }
+
+    private int hireYearOrder(
+            Member member
+    ) {
+
+        String employeeNo = member.getEmployeeNo();
+
+        if (employeeNo == null || employeeNo.isBlank()) {
+            return 9999;
+        }
+
+        String[] parts = employeeNo.split("-");
+
+        if (parts.length < 2) {
+            return 9999;
+        }
 
         try {
-            String employeeNo = member.getEmployeeNo();
-
-            // ABC-21-DEV-001 기준
-            String year = employeeNo.substring(4, 6);
-
-            return Integer.parseInt(year);
-
-        } catch (Exception e) {
-            return 99;
+            return Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
+            return 9999;
         }
     }
 }

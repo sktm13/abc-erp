@@ -2,6 +2,7 @@ package org.yujin.backend.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,6 +23,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final MemberRepository memberRepository;
 
+    private static final String HR_CONTACT_MESSAGE =
+            "인사과 문의 : 010 - 0000 - 0000";
+
     @Transactional
     @Override
     public UserDetails loadUserByUsername(String username)
@@ -36,8 +40,16 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("존재하지 않는 사원입니다.");
         }
 
+        if (member.getStatus() == MemberStatus.LEAVE) {
+            throw new DisabledException(
+                    "휴직 상태입니다.\n" + HR_CONTACT_MESSAGE
+            );
+        }
+
         if (member.getStatus() == MemberStatus.RESIGNED) {
-            throw new UsernameNotFoundException("퇴사 처리된 사원입니다.");
+            throw new DisabledException(
+                    "퇴사 상태입니다.\n" + HR_CONTACT_MESSAGE
+            );
         }
 
         MemberDTO memberDTO = new MemberDTO(
@@ -53,7 +65,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 member.getMemberRoleList()
                         .stream()
                         .map(role -> role.name())
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList())
+        );
 
         log.info(memberDTO);
 

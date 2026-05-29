@@ -8,10 +8,16 @@ import type {
   MemberRegisterRequest,
   MemberRegisterResponse,
   MemberModifyRequest,
-  PresenceStatus
+  PresenceStatus,
 } from "../types/member";
 
 const API_SERVER_HOST = import.meta.env.VITE_API_SERVER;
+
+export interface ChangePasswordRequest {
+  currentPw: string;
+  newPw: string;
+  confirmPw: string;
+}
 
 export const loginPost = async (
   employeeNo: string,
@@ -78,6 +84,14 @@ export const changeMyPresenceStatus = async (
       presenceStatus,
     },
   });
+
+  return res.data;
+};
+
+export const changeMyPassword = async (
+  data: ChangePasswordRequest
+): Promise<{ result: string }> => {
+  const res = await jwtAxios.put("/api/member/me/password", data);
 
   return res.data;
 };

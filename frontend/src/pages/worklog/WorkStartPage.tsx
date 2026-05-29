@@ -112,51 +112,57 @@ export default function WorkStartPage() {
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-2 gap-5">
-        <div className="bg-white rounded-[28px] border border-slate-200 shadow-sm p-8 flex flex-col justify-between">
-          <div>
+      <div className="flex-1 min-h-0 flex items-center justify-center">
+        <div className="w-full max-w-[620px] bg-white rounded-[32px] border border-slate-200 shadow-sm p-10">
+          <div className="flex flex-col items-center text-center">
+            <div
+              className={`w-5 h-5 rounded-full mb-5 ${
+                isWorking ? "bg-blue-500" : "bg-slate-300"
+              }`}
+            />
+
             <p className="text-sm font-semibold text-slate-400 mb-2">
               현재 근무 상태
             </p>
 
             <h2
-              className={`text-4xl font-bold ${
+              className={`text-5xl font-bold ${
                 isWorking ? "text-blue-600" : "text-slate-700"
               }`}
             >
               {isWorking ? "근무 중" : "근무 전"}
             </h2>
+          </div>
 
-            <div className="mt-8 space-y-3">
-              <div className="flex justify-between border-b border-slate-100 pb-3">
-                <span className="text-slate-400">근무 날짜</span>
-                <span className="font-semibold text-slate-700">
-                  {formatDate(currentStartTime)}
-                </span>
-              </div>
+          <div className="mt-10 bg-slate-50 rounded-3xl border border-slate-100 px-6 py-5 space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 font-medium">근무 날짜</span>
+              <span className="font-bold text-slate-700">
+                {formatDate(currentStartTime)}
+              </span>
+            </div>
 
-              <div className="flex justify-between border-b border-slate-100 pb-3">
-                <span className="text-slate-400">시작 시각</span>
-                <span className="font-semibold text-slate-700">
-                  {formatTime(currentStartTime)}
-                </span>
-              </div>
+            <div className="h-px bg-slate-200" />
+
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 font-medium">시작 시각</span>
+              <span className="font-bold text-slate-700">
+                {formatTime(currentStartTime)}
+              </span>
             </div>
           </div>
 
           {isWorking && (
-            <div className="bg-blue-50 border border-blue-100 text-blue-600 rounded-2xl px-5 py-4 text-sm font-medium">
+            <div className="mt-5 bg-blue-50 border border-blue-100 text-blue-600 rounded-2xl px-5 py-4 text-sm font-medium text-center">
               근무 종료 시 오늘 진행한 업무 내용을 입력합니다.
             </div>
           )}
-        </div>
 
-        <div className="bg-white rounded-[28px] border border-slate-200 shadow-sm p-8 flex flex-col justify-center">
-          <div className="space-y-4">
+          <div className="mt-8 grid grid-cols-2 gap-4">
             <button
               disabled={isWorking}
               onClick={handleStartWork}
-              className={`w-full py-5 rounded-3xl text-lg font-bold transition ${
+              className={`py-5 rounded-3xl text-lg font-bold transition ${
                 isWorking
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                   : "bg-[#3B82F6] text-white hover:bg-blue-500"
@@ -168,7 +174,7 @@ export default function WorkStartPage() {
             <button
               disabled={!isWorking}
               onClick={() => setEndModalOpen(true)}
-              className={`w-full py-5 rounded-3xl text-lg font-bold transition ${
+              className={`py-5 rounded-3xl text-lg font-bold transition ${
                 !isWorking
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                   : "bg-[#1E293B] text-white hover:bg-[#334155]"
@@ -178,7 +184,7 @@ export default function WorkStartPage() {
             </button>
           </div>
 
-          <p className="text-center text-sm text-slate-400 mt-6">
+          <p className="text-center text-sm text-slate-400 mt-5">
             근무 시작 후에는 종료 버튼만 활성화됩니다.
           </p>
         </div>

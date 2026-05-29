@@ -8,8 +8,8 @@ export interface LoginInfo {
   roleNames: string[];
   accessToken: string;
   refreshToken: string;
-
   loginStatus?: string;
+  loginErrorMessage: string;
 }
 
 export interface MemberResponse {

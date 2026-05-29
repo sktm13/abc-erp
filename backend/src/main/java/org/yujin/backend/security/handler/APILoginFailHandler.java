@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
@@ -30,19 +31,28 @@ public class APILoginFailHandler
                 HttpServletResponse.SC_UNAUTHORIZED
         );
 
+        response.setContentType(
+                "application/json;charset=UTF-8"
+        );
+
+        String message = "로그인에 실패했습니다.";
+
+        if (exception instanceof BadCredentialsException) {
+            message = "사번 또는 비밀번호가 올바르지 않습니다.";
+        } else if (exception.getMessage() != null
+                && !exception.getMessage().isBlank()) {
+            message = exception.getMessage();
+        }
+
         Gson gson = new Gson();
 
         String jsonStr =
                 gson.toJson(
                         Map.of(
-                                "error",
-                                "ERROR_LOGIN"
+                                "error", "ERROR_LOGIN",
+                                "message", message
                         )
                 );
-
-        response.setContentType(
-                "application/json"
-        );
 
         PrintWriter writer =
                 response.getWriter();

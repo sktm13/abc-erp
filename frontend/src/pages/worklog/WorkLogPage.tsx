@@ -449,7 +449,7 @@ export default function WorkLogPage() {
                   {logs.map((log) => (
                     <div
                       key={log.id}
-                      className="rounded-lg bg-white border border-slate-200 px-2 py-1.5 text-[10px] shadow-sm overflow-hidden"
+                      className="rounded-lg bg-white border border-slate-200 px-2 py-1.5 text-[11px] shadow-sm overflow-hidden"
                     >
                       <div className="flex items-center gap-1 whitespace-nowrap overflow-hidden">
                         <span className="font-semibold text-slate-700 shrink-0">

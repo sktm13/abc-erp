@@ -11,6 +11,7 @@ import org.yujin.backend.member.domain.Member;
 import org.yujin.backend.member.domain.MemberRole;
 import org.yujin.backend.member.domain.MemberStatus;
 import org.yujin.backend.member.domain.PresenceStatus;
+import org.yujin.backend.member.dto.ChangePasswordDTO;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.member.dto.MemberJoinDTO;
 import org.yujin.backend.member.dto.MemberModifyDTO;
@@ -157,6 +158,60 @@ public class MemberServiceImpl implements MemberService {
         member.changePresenceStatus(presenceStatus);
     }
 
+    @Override
+    public void changeMyPassword(
+            String employeeNo,
+            ChangePasswordDTO dto
+    ) {
+
+        Member member = memberRepository.findById(employeeNo)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사원입니다."));
+
+        if (member.getStatus() != MemberStatus.ACTIVE) {
+            throw new RuntimeException("재직 중인 사원만 비밀번호를 변경할 수 있습니다.");
+        }
+
+        if (dto.getCurrentPw() == null || dto.getCurrentPw().isBlank()) {
+            throw new RuntimeException("기존 비밀번호를 입력해주세요.");
+        }
+
+        if (dto.getNewPw() == null || dto.getNewPw().isBlank()) {
+            throw new RuntimeException("새 비밀번호를 입력해주세요.");
+        }
+
+        if (dto.getConfirmPw() == null || dto.getConfirmPw().isBlank()) {
+            throw new RuntimeException("비밀번호 확인을 입력해주세요.");
+        }
+
+        if (!passwordEncoder.matches(dto.getCurrentPw(), member.getPw())) {
+            throw new RuntimeException("기존 비밀번호가 일치하지 않습니다.");
+        }
+
+        if (!dto.getNewPw().equals(dto.getConfirmPw())) {
+            throw new RuntimeException("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+        }
+
+        if (passwordEncoder.matches(dto.getNewPw(), member.getPw())) {
+            throw new RuntimeException("기존 비밀번호와 다른 비밀번호를 입력해주세요.");
+        }
+
+        if (!isValidPassword(dto.getNewPw())) {
+            throw new RuntimeException("비밀번호는 8~20자, 영문/숫자/특수문자를 포함해야 합니다.");
+        }
+
+        member.changePw(
+                passwordEncoder.encode(dto.getNewPw())
+        );
+    }
+
+    private boolean isValidPassword(
+            String password
+    ) {
+
+        return password != null
+                && password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,20}$");
+    }
+
     private String generateEmployeeNo(String department) {
 
         String year = String.valueOf(LocalDate.now().getYear()).substring(2);
@@ -180,5 +235,4 @@ public class MemberServiceImpl implements MemberService {
 
         return prefix + String.format("%03d", nextNumber);
     }
-
 }

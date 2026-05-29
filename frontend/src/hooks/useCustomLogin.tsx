@@ -19,6 +19,8 @@ const useCustomLogin = () => {
 
   const loginStatus = loginState.loginStatus;
 
+  const loginErrorMessage = loginState.loginErrorMessage;
+
   const isReduxLogin =
     loginStatus === "fulfilled" ||
     loginStatus === "saved";
@@ -74,6 +76,7 @@ const useCustomLogin = () => {
   return {
     loginState,
     loginStatus,
+    loginErrorMessage,
     isLogin,
     isRestoring,
     doLogin,

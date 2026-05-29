@@ -3,6 +3,7 @@ package org.yujin.backend.member.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,10 +45,27 @@ public class Member {
     @Builder.Default
     private PresenceStatus presenceStatus = PresenceStatus.OFFLINE;
 
+    private LocalDateTime createdAt;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private List<MemberRole> memberRoleList = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+
+        if (this.status == null) {
+            this.status = MemberStatus.ACTIVE;
+        }
+
+        if (this.presenceStatus == null) {
+            this.presenceStatus = PresenceStatus.OFFLINE;
+        }
+    }
 
     public void addRole(MemberRole memberRole) {
         memberRoleList.add(memberRole);

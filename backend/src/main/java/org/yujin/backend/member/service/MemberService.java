@@ -4,6 +4,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.yujin.backend.common.dto.PageResponseDTO;
 import org.yujin.backend.member.domain.Member;
 import org.yujin.backend.member.domain.PresenceStatus;
+import org.yujin.backend.member.dto.ChangePasswordDTO;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.member.dto.MemberJoinDTO;
 import org.yujin.backend.member.dto.MemberModifyDTO;
@@ -27,6 +28,8 @@ public interface MemberService {
         Map<String, Object> refreshToken(String refreshToken);
 
         void changeMyPresenceStatus(String employeeNo, PresenceStatus presenceStatus);
+
+        void changeMyPassword(String employeeNo, ChangePasswordDTO changePasswordDTO);
         
         default MemberDTO entityToDTO(Member member) {
 

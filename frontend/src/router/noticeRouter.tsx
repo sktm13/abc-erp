@@ -2,9 +2,13 @@ import { lazy, Suspense } from "react";
 
 const Loading = <div>Loading...</div>;
 
-const NoticeAllPage = lazy(() => import("../pages/notice/NoticeAllPage"));
-const NoticeDepartmentPage = lazy(
-  () => import("../pages/notice/NoticeDepartmentPage")
+const NoticeListPage = lazy(() => import("../pages/notice/NoticeListPage"));
+const NoticeReadPage = lazy(() => import("../pages/notice/NoticeReadPage"));
+const NoticeRegisterPage = lazy(
+  () => import("../pages/notice/NoticeRegisterPage")
+);
+const NoticeModifyPage = lazy(
+  () => import("../pages/notice/NoticeModifyPage")
 );
 
 export default function noticeRouter() {
@@ -15,7 +19,7 @@ export default function noticeRouter() {
         path: "all",
         element: (
           <Suspense fallback={Loading}>
-            <NoticeAllPage />
+            <NoticeListPage scope="ALL" />
           </Suspense>
         ),
       },
@@ -23,7 +27,31 @@ export default function noticeRouter() {
         path: "department",
         element: (
           <Suspense fallback={Loading}>
-            <NoticeDepartmentPage />
+            <NoticeListPage scope="DEPARTMENT" />
+          </Suspense>
+        ),
+      },
+      {
+        path: "read/:noticeId",
+        element: (
+          <Suspense fallback={Loading}>
+            <NoticeReadPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "modify/:noticeId",
+        element: (
+          <Suspense fallback={Loading}>
+            <NoticeModifyPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "register",
+        element: (
+          <Suspense fallback={Loading}>
+            <NoticeRegisterPage />
           </Suspense>
         ),
       },
