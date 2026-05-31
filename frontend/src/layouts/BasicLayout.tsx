@@ -9,6 +9,7 @@ import {
 import BasicMenu from "../components/menus/BasicMenu";
 import useCustomLogin from "../hooks/useCustomLogin";
 import type { PresenceStatus } from "../types/member";
+import Messenger from "../components/messenger/Messenger";
 
 export default function BasicLayout() {
   const {
@@ -45,7 +46,7 @@ export default function BasicLayout() {
     }
 
     if (loginState.roleNames?.includes("MANAGER")) {
-      return "팀장급";
+      return "팀장";
     }
 
     return "사원";
@@ -59,25 +60,25 @@ export default function BasicLayout() {
     dot: string;
     activeClass: string;
   }[] = [
-    {
-      value: "ONLINE",
-      label: "온라인",
-      dot: "bg-emerald-500",
-      activeClass: "bg-white text-emerald-600 shadow-sm",
-    },
-    {
-      value: "AWAY",
-      label: "자리비움",
-      dot: "bg-amber-500",
-      activeClass: "bg-white text-amber-600 shadow-sm",
-    },
-    {
-      value: "OFFLINE",
-      label: "오프라인",
-      dot: "bg-slate-400",
-      activeClass: "bg-white text-slate-500 shadow-sm",
-    },
-  ];
+      {
+        value: "ONLINE",
+        label: "온라인",
+        dot: "bg-emerald-500",
+        activeClass: "bg-white text-emerald-600 shadow-sm",
+      },
+      {
+        value: "AWAY",
+        label: "자리비움",
+        dot: "bg-amber-500",
+        activeClass: "bg-white text-amber-600 shadow-sm",
+      },
+      {
+        value: "OFFLINE",
+        label: "오프라인",
+        dot: "bg-slate-400",
+        activeClass: "bg-white text-slate-500 shadow-sm",
+      },
+    ];
 
   const resetPasswordForm = () => {
     setCurrentPw("");
@@ -166,7 +167,7 @@ export default function BasicLayout() {
 
   return (
     <div className="h-screen bg-[#F8FAFC] p-5 flex gap-5 overflow-hidden">
-      <aside className="w-[270px] shrink-0 bg-[#1E293B] rounded-[34px] p-5 flex flex-col shadow-xl overflow-hidden">
+      <aside className="w-67.5 shrink-0 bg-[#1E293B] rounded-[34px] p-5 flex flex-col shadow-xl overflow-hidden">
         <div className="mb-10 px-3 pt-2 shrink-0">
           <div className="w-12 h-12 rounded-2xl bg-[#3B82F6] flex items-center justify-center text-white font-bold mb-4">
             A
@@ -228,10 +229,9 @@ export default function BasicLayout() {
                     className={`
                       flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold
                       transition-all duration-200
-                      ${
-                        isActive
-                          ? status.activeClass
-                          : "text-slate-400 hover:text-slate-600"
+                      ${isActive
+                        ? status.activeClass
+                        : "text-slate-400 hover:text-slate-600"
                       }
                     `}
                   >
@@ -262,10 +262,10 @@ export default function BasicLayout() {
           <Outlet />
         </main>
       </div>
-
+      <Messenger />
       {passwordModalOpen && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="w-[460px] bg-white rounded-[28px] p-8 shadow-xl">
+          <div className="w-115 bg-white rounded-[28px] p-8 shadow-xl">
             <h2 className="text-2xl font-bold text-slate-800 mb-2">
               비밀번호 변경
             </h2>

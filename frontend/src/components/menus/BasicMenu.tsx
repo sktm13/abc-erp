@@ -132,11 +132,6 @@ export default function BasicMenu() {
           </NavLink>
         </div>
       </div>
-
-      <NavLink to="/messenger" className={linkClass}>
-        <span className="text-lg">💬</span>
-        <span className="font-medium">메신저</span>
-      </NavLink>
     </nav>
   );
 }

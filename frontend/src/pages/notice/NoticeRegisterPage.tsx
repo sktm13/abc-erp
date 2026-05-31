@@ -100,7 +100,7 @@ export default function NoticeRegisterPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-800">공지 등록</h1>
           <p className="text-slate-400 mt-1">
-            팀장급 이상 사용자가 공지사항을 등록할 수 있습니다.
+            팀장 이상 사용자가 공지사항을 등록할 수 있습니다.
           </p>
         </div>
 

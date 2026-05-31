@@ -12,7 +12,7 @@ interface NoticeListPageProps {
   scope: NoticeScope;
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 const departmentText = (department?: string | null) => {
   if (department === "DEV") return "개발팀";
@@ -174,7 +174,7 @@ export default function NoticeListPage({ scope }: NoticeListPageProps) {
         )}
       </div>
 
-      <div className="flex-1 min-h-0 bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      <div className="shrink-0 bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div className="shrink-0 grid grid-cols-[90px_1fr_130px_150px_120px] bg-slate-50 border-b border-slate-200 px-5 h-[44px] items-center text-sm font-semibold text-slate-500">
           <div>상태</div>
           <div>제목</div>
@@ -183,7 +183,7 @@ export default function NoticeListPage({ scope }: NoticeListPageProps) {
           <div>첨부</div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div>
           {pagedNotices.map((notice) => (
             <button
               key={notice.id}
@@ -230,12 +230,22 @@ export default function NoticeListPage({ scope }: NoticeListPageProps) {
           ))}
 
           {notices.length === 0 && (
-            <div className="h-full flex items-center justify-center text-slate-400">
+            <div className="h-[416px] flex items-center justify-center text-slate-400">
               {searchKeyword
                 ? "검색 결과가 없습니다."
                 : "등록된 공지사항이 없습니다."}
             </div>
           )}
+
+          {notices.length > 0 &&
+            Array.from({
+              length: PAGE_SIZE - pagedNotices.length,
+            }).map((_, index) => (
+              <div
+                key={`empty-row-${index}`}
+                className="h-[52px] border-b border-slate-100"
+              />
+            ))}
         </div>
       </div>
 

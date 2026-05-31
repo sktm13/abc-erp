@@ -58,7 +58,8 @@ public class CustomSecurityConfig {
                                                 .requestMatchers(
                                                                 "/health",
                                                                 "/api/member/login",
-                                                                "/api/auth/refresh"
+                                                                "/api/auth/refresh",
+                                                                "/ws/**"
                                                 )
                                                 .permitAll()
 
@@ -117,7 +118,14 @@ public class CustomSecurityConfig {
                                 "Cache-Control",
                                 "Content-Type"));
 
-                configuration.setAllowCredentials(false);
+                /*
+                 * SockJS가 /ws/info 요청을 보낼 때 credentials mode가 include로 동작한다.
+                 * 따라서 Access-Control-Allow-Credentials: true 응답이 필요하다.
+                 *
+                 * 단, allowedOrigins를 "*"로 열지 않고
+                 * http://localhost:5173처럼 명확히 제한해야 한다.
+                 */
+                configuration.setAllowCredentials(true);
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 

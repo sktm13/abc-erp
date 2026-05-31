@@ -35,6 +35,12 @@ public class JWTCheckFilter extends OncePerRequestFilter {
                         return true;
                 }
 
+                // WebSocket / SockJS 연결 요청은 JWTCheckFilter 제외
+                // 실제 WebSocket 인증은 WebSocketConfig의 STOMP CONNECT에서 처리
+                if (path.startsWith("/ws")) {
+                        return true;
+                }
+
                 // 로그인 API는 JWT 검사 제외
                 if (path.equals("/api/member/login")) {
                         return true;

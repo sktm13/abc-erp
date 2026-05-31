@@ -237,7 +237,7 @@ export default function MemberModifyPage() {
                     {role === "EMPLOYEE"
                       ? "사원"
                       : role === "MANAGER"
-                      ? "팀장급"
+                      ? "팀장"
                       : "관리자"}
                   </button>
                 )

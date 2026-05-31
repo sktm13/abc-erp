@@ -85,7 +85,7 @@ export default function MemberListPage() {
 
     if (roleNames.includes("MANAGER")) {
       return {
-        label: "팀장급",
+        label: "팀장",
         className: "bg-blue-50 text-blue-600",
       };
     }
@@ -138,7 +138,7 @@ export default function MemberListPage() {
           >
             <option value="">전체 권한</option>
             <option value="EMPLOYEE">사원</option>
-            <option value="MANAGER">팀장급</option>
+            <option value="MANAGER">팀장</option>
             <option value="ADMIN">관리자</option>
           </select>
 

@@ -40,7 +40,7 @@ const getHighestRole = (roleNames: string[]) => {
 
 const roleText = (role: string) => {
   if (role === "ADMIN") return "관리자";
-  if (role === "MANAGER") return "팀장급";
+  if (role === "MANAGER") return "팀장";
   if (role === "EMPLOYEE") return "사원";
 
   return role;
