@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -30,6 +31,9 @@ import org.yujin.backend.security.handler.CustomAccessDeniedHandler;
 public class CustomSecurityConfig {
 
         private final CustomUserDetailsService customUserDetailsService;
+
+        @Value("${app.cors.allowed-origin}")
+        private String corsAllowedOrigin;
 
         @Bean
         public SecurityFilterChain filterChain(
@@ -103,7 +107,7 @@ public class CustomSecurityConfig {
                 CorsConfiguration configuration = new CorsConfiguration();
 
                 configuration.setAllowedOrigins(List.of(
-                                "http://localhost:5173"));
+                                corsAllowedOrigin));
 
                 configuration.setAllowedMethods(List.of(
                                 "GET",

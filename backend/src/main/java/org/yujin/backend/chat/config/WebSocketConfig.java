@@ -2,6 +2,7 @@ package org.yujin.backend.chat.config;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -20,6 +21,9 @@ import org.yujin.backend.util.JWTUtil;
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Value("${app.websocket.allowed-origin}")
+    private String allowedOrigin;
 
     @Override
     public void configureMessageBroker(
@@ -41,7 +45,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     ) {
 
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("http://localhost:5173")
+                .setAllowedOriginPatterns(allowedOrigin)
                 .withSockJS();
     }
 
