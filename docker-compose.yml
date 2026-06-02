@@ -48,8 +48,11 @@ services:
       DB_PASSWORD: admin
 
       JPA_DDL_AUTO: update
-      JPA_SHOW_SQL: "true"
-      HIBERNATE_FORMAT_SQL: "true"
+      JPA_SHOW_SQL: "false"
+      HIBERNATE_FORMAT_SQL: "false"
+
+      PERFORMANCE_LOGGING_ENABLED: "true"
+      MEMBER_CACHE_ENABLED: "false"
 
       NOTICE_UPLOAD_PATH: /app/uploads/notice
 

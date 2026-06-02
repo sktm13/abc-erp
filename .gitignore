@@ -27,3 +27,6 @@ Thumbs.db
 
 # logs
 *.log
+
+# performance test results
+scripts/perf/results/
