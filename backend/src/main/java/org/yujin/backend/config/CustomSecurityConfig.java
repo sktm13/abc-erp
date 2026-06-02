@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.yujin.backend.auth.service.RefreshTokenRedisService;
 import org.yujin.backend.security.CustomUserDetailsService;
 import org.yujin.backend.security.filter.JWTCheckFilter;
 import org.yujin.backend.security.handler.APILoginFailHandler;
@@ -31,6 +32,8 @@ import org.yujin.backend.security.handler.CustomAccessDeniedHandler;
 public class CustomSecurityConfig {
 
         private final CustomUserDetailsService customUserDetailsService;
+
+        private final RefreshTokenRedisService refreshTokenRedisService;
 
         @Value("${app.cors.allowed-origin}")
         private String corsAllowedOrigin;
@@ -63,8 +66,7 @@ public class CustomSecurityConfig {
                                                                 "/health",
                                                                 "/api/member/login",
                                                                 "/api/auth/refresh",
-                                                                "/ws/**"
-                                                )
+                                                                "/ws/**")
                                                 .permitAll()
 
                                                 .anyRequest()
@@ -77,7 +79,7 @@ public class CustomSecurityConfig {
                                                         "/api/member/login");
 
                                         config.successHandler(
-                                                        new APILoginSuccessHandler());
+                                                        new APILoginSuccessHandler(refreshTokenRedisService));
 
                                         config.failureHandler(
                                                         new APILoginFailHandler());

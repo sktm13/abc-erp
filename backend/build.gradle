@@ -45,6 +45,10 @@ dependencies {
 
 	//메신저 웹소켓
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	//Redis 추가
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	
 }
 
 tasks.named('test') {

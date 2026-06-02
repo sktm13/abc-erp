@@ -2,12 +2,14 @@ package org.yujin.backend.common.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Data
+@NoArgsConstructor
 public class PageResponseDTO<E> {
 
     private List<E> dtoList;

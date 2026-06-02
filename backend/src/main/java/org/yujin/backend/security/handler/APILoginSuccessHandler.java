@@ -4,9 +4,12 @@ import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.yujin.backend.auth.service.RefreshTokenRedisService;
 import org.yujin.backend.member.dto.MemberDTO;
 import org.yujin.backend.util.JWTUtil;
 
@@ -15,8 +18,11 @@ import java.io.PrintWriter;
 import java.util.Map;
 
 @Log4j2
+@RequiredArgsConstructor
 public class APILoginSuccessHandler
         implements AuthenticationSuccessHandler {
+
+    private final RefreshTokenRedisService refreshTokenRedisService;
 
     @Override
     public void onAuthenticationSuccess(
@@ -47,10 +53,17 @@ public class APILoginSuccessHandler
                         60 * 24
                 );
 
+        // Redis에 Refresh Token 저장
+        refreshTokenRedisService.save(
+                memberDTO.getUsername(),
+                refreshToken
+        );
+
         claims.put("accessToken", accessToken);
         claims.put("refreshToken", refreshToken);
 
-        Gson gson = new Gson();
+        Gson gson =
+                new Gson();
 
         String jsonStr =
                 gson.toJson(claims);

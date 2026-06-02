@@ -43,6 +43,9 @@ services:
     environment:
       SERVER_PORT: 8080
 
+      TZ: Asia/Seoul
+      JAVA_TOOL_OPTIONS: "-Duser.timezone=Asia/Seoul"
+      
       DB_URL: jdbc:mariadb://mariadb:3306/abcerpdb
       DB_USERNAME: admin
       DB_PASSWORD: admin
@@ -52,7 +55,14 @@ services:
       HIBERNATE_FORMAT_SQL: "false"
 
       PERFORMANCE_LOGGING_ENABLED: "true"
-      MEMBER_CACHE_ENABLED: "false"
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      MEMBER_CACHE_ENABLED: "true"
+      MEMBER_CACHE_TTL_MINUTES: "10"
+
+      REFRESH_TOKEN_TTL_MINUTES: "1440"
 
       NOTICE_UPLOAD_PATH: /app/uploads/notice
 

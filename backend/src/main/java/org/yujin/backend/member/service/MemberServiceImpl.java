@@ -6,7 +6,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.yujin.backend.auth.service.RefreshTokenRedisService;
 import org.yujin.backend.common.dto.PageResponseDTO;
+import org.yujin.backend.member.cache.MemberListCacheService;
 import org.yujin.backend.member.domain.Member;
 import org.yujin.backend.member.domain.MemberRole;
 import org.yujin.backend.member.domain.MemberStatus;
@@ -31,6 +33,8 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MemberListCacheService memberListCacheService;
+    private final RefreshTokenRedisService refreshTokenRedisService;
 
     @Override
     public String join(MemberJoinDTO dto) {
@@ -52,6 +56,9 @@ public class MemberServiceImpl implements MemberService {
         member.addRole(MemberRole.EMPLOYEE);
 
         memberRepository.save(member);
+
+        // 캐시무효화
+        memberListCacheService.evictAll();
 
         return employeeNo;
     }
@@ -105,11 +112,17 @@ public class MemberServiceImpl implements MemberService {
 
             dto.getRoleList().forEach(member::addRole);
         }
+        // 캐시무효화
+        memberListCacheService.evictAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponseDTO<MemberResponseDTO> getList(MemberSearchDTO memberSearchDTO) {
-        return memberRepository.searchList(memberSearchDTO);
+
+        return memberListCacheService.getOrLoad(
+                memberSearchDTO,
+                () -> memberRepository.searchList(memberSearchDTO));
     }
 
     @Override
@@ -119,6 +132,10 @@ public class MemberServiceImpl implements MemberService {
 
         String employeeNo = (String) refreshClaims.get("employeeNo");
 
+        refreshTokenRedisService.validate(
+                employeeNo,
+                refreshToken);
+
         Member member = memberRepository.getWithRoles(employeeNo);
 
         if (member == null) {
@@ -126,6 +143,7 @@ public class MemberServiceImpl implements MemberService {
         }
 
         if (member.getStatus() == MemberStatus.RESIGNED) {
+            refreshTokenRedisService.delete(employeeNo);
             throw new RuntimeException("퇴사 처리된 사원입니다.");
         }
 
@@ -133,9 +151,17 @@ public class MemberServiceImpl implements MemberService {
 
         Map<String, Object> claims = memberDTO.getClaims();
 
-        String newAccessToken = JWTUtil.generateToken(claims, 30);
+        String newAccessToken = JWTUtil.generateToken(
+                claims,
+                30);
 
-        String newRefreshToken = JWTUtil.generateToken(claims, 60 * 24);
+        String newRefreshToken = JWTUtil.generateToken(
+                claims,
+                60 * 24);
+
+        refreshTokenRedisService.save(
+                employeeNo,
+                newRefreshToken);
 
         claims.put("accessToken", newAccessToken);
         claims.put("refreshToken", newRefreshToken);
@@ -156,13 +182,14 @@ public class MemberServiceImpl implements MemberService {
         }
 
         member.changePresenceStatus(presenceStatus);
+
+        memberListCacheService.evictAll();
     }
 
     @Override
     public void changeMyPassword(
             String employeeNo,
-            ChangePasswordDTO dto
-    ) {
+            ChangePasswordDTO dto) {
 
         Member member = memberRepository.findById(employeeNo)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사원입니다."));
@@ -200,13 +227,11 @@ public class MemberServiceImpl implements MemberService {
         }
 
         member.changePw(
-                passwordEncoder.encode(dto.getNewPw())
-        );
+                passwordEncoder.encode(dto.getNewPw()));
     }
 
     private boolean isValidPassword(
-            String password
-    ) {
+            String password) {
 
         return password != null
                 && password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,20}$");
