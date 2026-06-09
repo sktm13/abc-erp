@@ -73,7 +73,7 @@ Spring Boot API, React + Vite를 활용한 사내 ERP 시스템입니다.
 * Docker Compose 기반 통합 실행 환경
 * Frontend / Backend / MariaDB / Redis 컨테이너 구성
 * 초기 데이터 자동 생성
-* Windows 및 M1 Mac 환경에서 Docker Compose 실행 확인
+* Windows 및 Mac OS 환경에서 Docker Compose 실행 검증 완료
 ---
 
 ## Tech Stack
