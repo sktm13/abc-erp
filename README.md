@@ -104,8 +104,12 @@ Spring Boot API, React + Vite를 활용한 사내 ERP 시스템입니다.
 ---
 ## 실행 방법
 
-Docker Compose 기준 실행
-실행 시 초기 데이터가 자동 생성되며, 이미 데이터가 존재하는 경우 중복 생성하지 않습니다.
+Docker 실행 -> 프로젝트 루트에서 명령어 실행
+ *실행 시 초기 데이터가 자동 생성되며, 이미 데이터가 존재하는 경우 중복 생성하지 않습니다.
+
+```bash
+docker compose up --build
+```
 
 초기 데이터 구성:
 ```text
@@ -113,18 +117,6 @@ Docker Compose 기준 실행
 공지사항: 120개
 근무일지: 250건
 채팅 데이터: 초기 생성 제외
-```
-
-프로젝트 루트에서 명령어 실행
-
-```bash
-docker compose up --build
-```
-
-DB 초기화:
-
-```bash
-docker compose down -v
 ```
 
 ---
